@@ -1,6 +1,6 @@
 # plots
 
-a repo for generative art plots
+a repo for my generative art plots
 
 ## Get started:
 
