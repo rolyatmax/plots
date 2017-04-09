@@ -2,6 +2,7 @@ import Alea from 'alea'
 import SimplexNoise from 'simplex-noise'
 import vec2 from 'gl-vec2'
 
+import optimizePathOrder from '../utils/optimize-path-order'
 import { PaperSize, Orientation } from 'penplot'
 import { polylinesToSVG } from 'penplot/util/svg'
 
@@ -21,7 +22,7 @@ export default function createPlot (context, dimensions) {
 
   let { step, lineLength, seed, noiseStep } = settings
 
-  const lines = []
+  let lines = []
   const circles = []
 
   const rand = new Alea(seed)
@@ -35,6 +36,8 @@ export default function createPlot (context, dimensions) {
     const noise = [xNoiseStart, yNoise]
     drawRow(y, noise[0], noise[1])
   }
+
+  lines = optimizePathOrder(lines)
 
   function drawRow (y, xNoise, yNoise) {
     for (let x = margin; x <= width - margin; x += step * 2) {
