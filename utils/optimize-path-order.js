@@ -1,11 +1,15 @@
-export default function optimizePathOrder (paths) {
+module.exports = function optimizePathOrder (paths) {
   const preoptimizedDistance = getTravelingDistance(paths)
   console.log('preoptimizedDistance', preoptimizedDistance)
 
   const newPaths = []
-  newPaths.push(paths[0])
 
-  paths = paths.slice(1)
+  paths = paths.slice()
+
+  // assuming better performance by selecting first path at random
+  const firstPathIdx = Math.random() * paths.length | 0
+  const firstPath = paths.splice(firstPathIdx, 1)[0]
+  newPaths.push(firstPath)
 
   while (paths.length) {
     const lastPath = newPaths[newPaths.length - 1]
