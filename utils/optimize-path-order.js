@@ -2,10 +2,10 @@ export default function optimizePathOrder (paths) {
   const preoptimizedDistance = getTravelingDistance(paths)
   console.log('preoptimizedDistance', preoptimizedDistance)
 
-  paths = paths.slice()
-
   const newPaths = []
   newPaths.push(paths[0])
+
+  paths = paths.slice(1)
 
   while (paths.length) {
     const lastPath = newPaths[newPaths.length - 1]
