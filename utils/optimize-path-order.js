@@ -1,15 +1,19 @@
-module.exports = function optimizePathOrder (paths) {
+module.exports = function optimizePathOrder (paths, shouldMergePaths = true) {
+  if (!paths.length) return paths
   const preoptimizedDistance = getTravelingDistance(paths)
   console.log('preoptimizedDistance', preoptimizedDistance)
-
-  const newPaths = []
+  console.log('preoptimizedPathCount', paths.length)
 
   paths = paths.slice()
 
-  // assuming better performance by selecting first path at random
-  const firstPathIdx = Math.random() * paths.length | 0
-  const firstPath = paths.splice(firstPathIdx, 1)[0]
-  newPaths.push(firstPath)
+  // console.log(paths)
+  // paths = removeDuplicates(paths)
+  // console.log('dedupedPathCount', paths.length)
+
+  let newPaths = []
+  newPaths.push(paths[0])
+
+  paths = paths.slice(1)
 
   while (paths.length) {
     const lastPath = newPaths[newPaths.length - 1]
@@ -49,10 +53,35 @@ module.exports = function optimizePathOrder (paths) {
     newPaths.push(closestPath)
   }
 
+  if (shouldMergePaths) {
+    for (let i = 1; i < newPaths.length; i++) {
+      const lastPath = newPaths[i - 1]
+      const curPath = newPaths[i]
+      if (squaredDistance(curPath[0], lastPath[lastPath.length - 1]) < Math.pow(0.05, 2)) {
+        newPaths = mergePaths(newPaths, i - 1, i)
+        i -= 1 // now that we've merged, let's correct i for the next round
+      }
+    }
+  }
+
   const optimizedDistance = getTravelingDistance(newPaths)
   console.log('optimizedDistance', optimizedDistance)
+  console.log('optimizedPathCount', newPaths.length)
 
   return newPaths
+}
+
+function mergePaths (paths, path1Idx, path2Idx) {
+  // this will help us keep things in order when we do the splicing
+  const minIdx = Math.min(path1Idx, path2Idx)
+  const maxIdx = Math.max(path1Idx, path2Idx)
+  paths = paths.slice()
+  const path1 = paths[minIdx]
+  const path2 = paths[maxIdx]
+  const mergedPath = path1.concat(path2.slice(1))
+  paths.splice(maxIdx, 1)
+  paths.splice(minIdx, 1, mergedPath)
+  return paths
 }
 
 // this is the distance between paths - from the end of path 1 to the start of path 2
@@ -72,3 +101,21 @@ function squaredDistance (pt1, pt2) {
   const dy = pt2[1] - pt1[1]
   return dx * dx + dy * dy
 }
+
+// function removeDuplicates (paths) {
+//   const pathsSeen = {}
+//   const dedupedPaths = []
+//   for (let path of paths) {
+//     const keyedPath = path.map(p => `${p[0]},${p[1]}`).join('|')
+//     const reversed = path.slice()
+//     reversed.reverse()
+//     const reversedKeyedPath = reversed.map(p => `${p[0]},${p[1]}`).join('|')
+//     if (pathsSeen[keyedPath] || pathsSeen[reversedKeyedPath]) {
+//       continue
+//     }
+//     dedupedPaths.push(path)
+//     pathsSeen[keyedPath] = true
+//     pathsSeen[reversedKeyedPath] = true
+//   }
+//   return dedupedPaths
+// }

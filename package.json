@@ -12,9 +12,11 @@
   "dependencies": {
     "alea": "^0.0.9",
     "b-spline": "^2.0.1",
+    "d3-random": "^1.1.0",
     "dat-gui": "^0.5.0",
     "delaunay": "^0.4.0",
     "gl-vec2": "^1.0.0",
+    "lineclip": "^1.1.5",
     "new-array": "^1.0.0",
     "penplot": "git+https://github.com/mattdesl/penplot.git#794de38",
     "perspective-camera": "^2.0.1",

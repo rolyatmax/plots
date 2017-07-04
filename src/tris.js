@@ -1,11 +1,12 @@
-import { PaperSize, Orientation } from 'penplot'
+import { Orientation } from 'penplot'
 import { polylinesToSVG } from 'penplot/util/svg'
-import newArray from 'new-array'
 import { add, subtract, scale, distance } from 'gl-vec2'
+import optimizePathOrder from '../utils/optimize-path-order'
+import { GUI } from 'dat-gui'
 import Alea from 'alea'
 
 const settings = {
-  lineLength: 0.4,
+  lineLength: 4,
   turnDegrees: 60,
   maxPoints: 800,
   maxLines: 3,
@@ -14,39 +15,56 @@ const settings = {
 }
 
 export const orientation = Orientation.LANDSCAPE
-export const dimensions = [22.9, 30.5]
+export const dimensions = [22.5, 30] // [22.9, 30.5]
 export const outputImageHeight = 800
 
 export default function createPlot (context, dimensions) {
   const [width, height] = dimensions
 
   const center = [width / 2, height / 2]
-  const pathsTaken = {}
-  const rand = new Alea(settings.seed)
+  let pathsTaken
+  let rand
 
-  const lines = []
+  let lines = []
 
-  while (lines.length < settings.maxLines) {
-    const rads = rand() * Math.PI * 2
-    const r = rand() * settings.maxDistance
-    const start = [
-      Math.cos(rads) * r + center[0],
-      Math.sin(rads) * r + center[1]
-    ]
-    const line = [start] // [center]
-    while (line.length < settings.maxPoints) {
-      const curPt = line[line.length - 1]
-      const nextPt = getNextPoint(curPt)
-      if (!nextPt) break
-      line.push(nextPt)
+  const gui = new GUI()
+  gui.add(settings, 'seed', 0, 100).onChange(setup)
+  gui.add(settings, 'turnDegrees', 1, 360).step(1).onChange(setup)
+  gui.add(settings, 'lineLength', 1, 50).onChange(setup)
+  gui.add(settings, 'maxPoints', 1, 1000).step(1).onChange(setup)
+  gui.add(settings, 'maxLines', 1, 20).step(1).onChange(setup)
+  gui.add(settings, 'maxDistance', 1, 15).onChange(setup)
+
+  setup()
+
+  function setup () {
+    lines = []
+    rand = new Alea(settings.seed)
+    pathsTaken = {}
+    while (lines.length < settings.maxLines) {
+      const rads = rand() * Math.PI * 2
+      const r = rand() * settings.maxDistance
+      const start = [
+        Math.cos(rads) * r + center[0],
+        Math.sin(rads) * r + center[1]
+      ]
+      const line = [start] // [center]
+      while (line.length < settings.maxPoints) {
+        const curPt = line[line.length - 1]
+        const nextPt = getNextPoint(curPt)
+        if (!nextPt) break
+        line.push(nextPt)
+      }
+      lines.push(line)
     }
-    lines.push(line)
+
+    lines = optimizePathOrder(lines)
   }
 
   return {
     draw,
     print,
-    animate: false,
+    animate: true,
     clear: true
   }
 
@@ -81,7 +99,7 @@ export default function createPlot (context, dimensions) {
     }
     const points = directions.map(dir => {
       const rads = dir / 360 * Math.PI * 2
-      const vec = scale([], [Math.cos(rads), Math.sin(rads)], settings.lineLength)
+      const vec = scale([], [Math.cos(rads), Math.sin(rads)], settings.lineLength / 10)
       return add(vec, vec, position)
     })
     return points.filter(pt =>

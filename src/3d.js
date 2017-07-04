@@ -1,5 +1,6 @@
 import { Orientation } from 'penplot'
 import { polylinesToSVG } from 'penplot/util/svg'
+import optimizePathOrder from '../utils/optimize-path-order'
 import Alea from 'alea'
 import createCamera from 'perspective-camera'
 import { GUI } from 'dat-gui'
@@ -8,18 +9,18 @@ import SimplexNoise from 'simplex-noise'
 import { triangulate } from 'delaunay'
 
 export const orientation = Orientation.LANDSCAPE
-export const dimensions = [17, 25] // [22.9, 30.5]
+export const dimensions = [22.9, 30.5]
 export const outputImageHeight = 800
 
 const settings = {
-  seed: Math.random() * 100,
-  points: 150,
-  pow: 12,
-  noiseStep: 5,
-  noiseMag: 10,
+  seed: 29, // Math.random() * 100,
+  points: 220,
+  pow: -2,
+  noiseStep: 0,
+  noiseMag: 0,
   cameraX: 0,
-  cameraY: 30,
-  cameraZ: 60
+  cameraY: 0,
+  cameraZ: 100
 }
 
 export default function createPlot (context, dimensions) {
@@ -28,7 +29,7 @@ export default function createPlot (context, dimensions) {
   let rand
 
   const gui = new GUI()
-  gui.add(settings, 'seed', 0, 100).onChange(setup)
+  gui.add(settings, 'seed', 0, 100).step(1).onChange(setup)
   gui.add(settings, 'points', 0, 500).step(1).onChange(setup)
   gui.add(settings, 'pow', -100, 100).step(1).onChange(setup)
   gui.add(settings, 'noiseStep', 0, 1000).step(1).onChange(setup)
@@ -85,6 +86,8 @@ export default function createPlot (context, dimensions) {
       points.push(points[0])
       return points
     })
+
+    lines = optimizePathOrder(lines)
   }
 
   return {
